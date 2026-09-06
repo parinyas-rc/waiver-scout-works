@@ -1,0 +1,28 @@
+{
+  "_comment": "Edit this all season. Names are matched loosely, so partial names are fine. Move players between tiers as roles change.",
+  "tiers": {
+    "must_add": [
+      "MarShawn Lloyd",
+      "De'Zhaun Stribling",
+      "Tyjae Spears"
+    ],
+    "priority": [
+      "Rico Dowdle",
+      "Jaylen Warren",
+      "Jalen McMillan",
+      "Stefon Diggs",
+      "Sione Vaki",
+      "Tank Bigsby",
+      "Jordan Mason"
+    ],
+    "stash": [
+      "Carnell Tate",
+      "Josh Downs",
+      "Ja'Kobi Lane",
+      "Chig Okonkwo",
+      "Gunnar Helm",
+      "Greg Dulcich",
+      "Caleb Douglas"
+    ]
+  }
+}
