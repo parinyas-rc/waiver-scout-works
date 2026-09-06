@@ -1,0 +1,64 @@
+name: gameday
+
+# GitHub's cron floor is 5 minutes and scheduled runs are often delayed, which
+# is too slow when a starter goes down mid-game. Each run starts on the hour
+# and then polls from inside the job every 90 seconds for 55 minutes.
+#
+# Times are UTC and cover US Eastern windows during daylight saving. After the
+# November clock change, shift each block one hour later.
+
+on:
+  schedule:
+    - cron: '0 16-23 * * 0'   # Sunday afternoon/evening ET
+    - cron: '0 0-4  * * 1'    # Sunday night football
+    - cron: '0 0-3  * * 2'    # Monday night football
+    - cron: '0 0-3  * * 5'    # Thursday night football
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: 'How long to watch'
+        default: '55'
+
+permissions:
+  contents: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+
+      - name: Restore player cache
+        uses: actions/cache@v4
+        with:
+          path: players_cache.json
+          key: players-${{ github.run_id }}
+          restore-keys: players-
+
+      - name: Watch live
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          MINS="${{ github.event.inputs.minutes || '55' }}"
+          python scout.py --mode loop --interval 90 --duration $((MINS * 60))
+
+      - name: Persist state
+        if: always()
+        run: |
+          git config user.name  "waiver-scout"
+          git config user.email "actions@users.noreply.github.com"
+          git add state.json || true
+          git diff --staged --quiet && exit 0
+          git commit -m "state: gameday $(date -u +%FT%TZ)"
+          for i in 1 2 3; do
+            git pull --rebase --autostash && git push && exit 0
+            sleep 5
+          done
+          echo "could not push state" >&2
